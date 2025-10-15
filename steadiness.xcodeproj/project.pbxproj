@@ -6,8 +6,23 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXCopyFilesBuildPhase section */
+		6B825AA22E8D1111009842E2 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		6B609C4A2E8CD7B7002FB7B0 /* steadiness.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = steadiness.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B825A892E8D110F009842E2 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		6B825A8B2E8D110F009842E2 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -15,6 +30,13 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+			);
+			target = 6B609C492E8CD7B7002FB7B0 /* steadiness */;
+		};
+		6B825AAB2E8D1281009842E2 /* Exceptions for "Design" folder in "steadiness" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Colors.swift,
 			);
 			target = 6B609C492E8CD7B7002FB7B0 /* steadiness */;
 		};
@@ -27,6 +49,29 @@
 				6B609C5A2E8CD7B9002FB7B0 /* Exceptions for "steadiness" folder in "steadiness" target */,
 			);
 			path = steadiness;
+			sourceTree = "<group>";
+		};
+		6B825AA62E8D1209009842E2 /* Design */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				6B825AAB2E8D1281009842E2 /* Exceptions for "Design" folder in "steadiness" target */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		6BF09A2B2E9F406700DE6CF7 /* Routing */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Routing;
+			sourceTree = "<group>";
+		};
+		6BF09A302E9F40FC00DE6CF7 /* Managers */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		6BF09A332E9F42EA00DE6CF7 /* App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = App;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +90,12 @@
 		6B609C412E8CD7B7002FB7B0 = {
 			isa = PBXGroup;
 			children = (
+				6BF09A332E9F42EA00DE6CF7 /* App */,
+				6BF09A302E9F40FC00DE6CF7 /* Managers */,
+				6BF09A2B2E9F406700DE6CF7 /* Routing */,
+				6B825AA62E8D1209009842E2 /* Design */,
 				6B609C4C2E8CD7B7002FB7B0 /* steadiness */,
+				6B825A882E8D110F009842E2 /* Frameworks */,
 				6B609C4B2E8CD7B7002FB7B0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -58,6 +108,15 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		6B825A882E8D110F009842E2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6B825A892E8D110F009842E2 /* WidgetKit.framework */,
+				6B825A8B2E8D110F009842E2 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -68,6 +127,7 @@
 				6B609C462E8CD7B7002FB7B0 /* Sources */,
 				6B609C472E8CD7B7002FB7B0 /* Frameworks */,
 				6B609C482E8CD7B7002FB7B0 /* Resources */,
+				6B825AA22E8D1111009842E2 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -75,6 +135,9 @@
 			);
 			fileSystemSynchronizedGroups = (
 				6B609C4C2E8CD7B7002FB7B0 /* steadiness */,
+				6BF09A2B2E9F406700DE6CF7 /* Routing */,
+				6BF09A302E9F40FC00DE6CF7 /* Managers */,
+				6BF09A332E9F42EA00DE6CF7 /* App */,
 			);
 			name = steadiness;
 			packageProductDependencies = (
@@ -90,7 +153,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1630;
+				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1630;
 				TargetAttributes = {
 					6B609C492E8CD7B7002FB7B0 = {
@@ -146,7 +209,7 @@
 				CODE_SIGN_ENTITLEMENTS = steadiness/steadiness.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6UBDUH2QYY;
+				DEVELOPMENT_TEAM = B9W3N5SMQN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = steadiness/Info.plist;
@@ -163,6 +226,10 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.codepat.steadiness;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -177,7 +244,7 @@
 				CODE_SIGN_ENTITLEMENTS = steadiness/steadiness.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6UBDUH2QYY;
+				DEVELOPMENT_TEAM = B9W3N5SMQN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = steadiness/Info.plist;
@@ -194,6 +261,10 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.codepat.steadiness;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

@@ -8,22 +8,22 @@
 import SwiftUI
 import UserNotifications
 
-extension Color {
+//extension Color {
     // 살구빛 주황 팔레트
-    static let peach = Color(hex: 0xF2B184)
-    static let peachDark = Color(hex: 0xE08E62)
-    static let bgLight = Color(hex: 0xF5F5F7)
-    static let textDark = Color(hex: 0x333333)
-    static let textMid = Color(hex: 0x666666)
+//    static let peach = Color(hex: 0xF2B184)
+//    static let peachDark = Color(hex: 0xE08E62)
+//    static let bgLight = Color(hex: 0xF5F5F7)
+//    static let textDark = Color(hex: 0x333333)
+//    static let textMid = Color(hex: 0x666666)
 
-    init(hex: UInt, alpha: Double = 1.0) {
-        self.init(.sRGB,
-                  red: Double((hex >> 16) & 0xFF)/255,
-                  green: Double((hex >> 8) & 0xFF)/255,
-                  blue: Double(hex & 0xFF)/255,
-                  opacity: alpha)
-    }
-}
+//    init(hex: UInt, alpha: Double = 1.0) {
+//        self.init(.sRGB,
+//                  red: Double((hex >> 16) & 0xFF)/255,
+//                  green: Double((hex >> 8) & 0xFF)/255,
+//                  blue: Double(hex & 0xFF)/255,
+//                  opacity: alpha)
+//    }
+//}
 
 enum Noti {
     static func request() {

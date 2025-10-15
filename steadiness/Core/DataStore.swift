@@ -13,11 +13,56 @@ final class DataStore: ObservableObject {
     @Published var records: [DayRecord] = [] { didSet { save() } }
     @Published var achievements: [Achievement] = DefaultBadges.all { didSet { save() } }
     
+    // ✅ 메모 저장
+    @Published var notes: [DayNote] = [] { didSet { save() } }
+    
     private let habitsFile = "habits.json"
     private let recordsFile = "records.json"
+    
+    // 해당 날짜+습관 완료 토글
+    func toggle(date: Date, habit: Habit) {
+        let cal = Calendar.current
+        let key = cal.startOfDay(for: date)
+        if let i = records.firstIndex(where: { $0.habitId == habit.id && cal.isDate($0.date, inSameDayAs: key) }) {
+            records[i].completed.toggle()
+        } else {
+            records.append(.init(habitId: habit.id, date: key, completed: true, minutes: habit.durationMin))
+        }
+        checkAchievements()
+    }
+
+    // 메모 읽기/쓰기
+    func note(for date: Date, habitId: UUID?) -> DayNote? {
+        let key = Calendar.current.startOfDay(for: date)
+        return notes.first { $0.habitId == habitId && Calendar.current.isDate($0.date, inSameDayAs: key) }
+    }
+    func upsertNote(date: Date, habitId: UUID?, text: String) {
+        let key = Calendar.current.startOfDay(for: date)
+        if let idx = notes.firstIndex(where: { $0.habitId == habitId && Calendar.current.isDate($0.date, inSameDayAs: key) }) {
+            notes[idx].text = text
+        } else {
+            notes.append(DayNote(date: key, habitId: habitId, text: text))
+        }
+    }
 
     private func documentsURL(_ file: String) -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(file)
+    }
+    
+    private func updateTodaySummary() {
+//        let cal = Calendar.current
+//        let todayKey = ISO8601DateFormatter().string(from: cal.startOfDay(for: .now)).prefix(10) // yyyy-mm-dd
+//        // 오늘 할 일들: 단순히 모든 활성 약속 기준 (원하면 오늘 요일 필터를 추가)
+//        let active = habits.filter { $0.isActive }
+//        let remaining = active.filter { !isCompletedToday($0) }
+//        let titles = remaining.prefix(3).map { $0.title }
+//
+//        let summary = TodaySummary(
+//            date: String(todayKey),
+//            remainingCount: remaining.count,
+//            topTitles: titles
+//        )
+//        SharedSummary.save(summary)
     }
 
     // MARK: - Habit CRUD
@@ -28,11 +73,13 @@ final class DataStore: ObservableObject {
     func updateHabit(_ habit: Habit) {
         guard let idx = habits.firstIndex(where: { $0.id == habit.id }) else { return }
         habits[idx] = habit
+        save()
     }
 
     func deleteHabit(_ habit: Habit) {
         habits.removeAll { $0.id == habit.id }
         records.removeAll { $0.habitId == habit.id }
+        save()
     }
 
     // MARK: - Completion
@@ -205,6 +252,8 @@ extension DataStore {
             try enc.encode(habits).write(to: documentsURL(habitsFile), options: .atomic)
             try enc.encode(records).write(to: documentsURL(recordsFile), options: .atomic)
             try enc.encode(achievements).write(to: documentsURL("achievements.json"), options: .atomic)
+            try enc.encode(notes).write(to: documentsURL("notes.json"), options: .atomic)
+
         } catch {
             print("Save error:", error)
         }
@@ -217,6 +266,7 @@ extension DataStore {
             let hURL = documentsURL(habitsFile)
             let rURL = documentsURL(recordsFile)
             let aURL = documentsURL("achievements.json")
+            let nURL = documentsURL("notes.json")
             if FileManager.default.fileExists(atPath: hURL.path) {
                 habits = try dec.decode([Habit].self, from: Data(contentsOf: hURL))
             }
@@ -226,13 +276,85 @@ extension DataStore {
             if FileManager.default.fileExists(atPath: aURL.path) {
                 achievements = try dec.decode([Achievement].self, from: Data(contentsOf: aURL))
             }
+            if FileManager.default.fileExists(atPath: nURL.path) {
+                notes = try dec.decode([DayNote].self, from: Data(contentsOf: nURL))
+            }
         } catch {
             print("Load error:", error)
         }
+        updateTodaySummary()
     }
 }
 
 private extension Array where Element: Hashable {
     func uniqued() -> [Element] { Array(Set(self)) }
+}
+
+// MARK: - Goals analytics helpers
+
+extension DataStore {
+    // 특정 습관에 한정해 완료 카운트 (nil이면 전체)
+    func completedCount(on day: Date, for habit: Habit?) -> Int {
+        let cal = Calendar.current
+        let key = cal.startOfDay(for: day)
+        if let habit {
+            return records.filter { $0.habitId == habit.id && $0.completed && cal.isDate($0.date, inSameDayAs: key) }.count
+        } else {
+            return records.filter { $0.completed && cal.isDate($0.date, inSameDayAs: key) }.count
+        }
+    }
+
+    // 주간 달성률 (선택 습관 기준)
+    func weeklyRates(for type: PeriodType, habit: Habit? = nil, cal: Calendar = .current) -> [(weekOfYear: Int, rate: Double)] {
+        let (start, end) = periodDatesRolling(for: type)
+        let allDays = days(in: start, end)
+        let grouped = Dictionary(grouping: allDays) { cal.component(.weekOfYear, from: $0) }
+        return grouped.keys.sorted().map { w in
+            let daysOfWeek = grouped[w] ?? []
+            let completedDays = daysOfWeek.filter { completedCount(on: $0, for: habit) > 0 }.count
+            let rate = daysOfWeek.isEmpty ? 0 : Double(completedDays) / Double(daysOfWeek.count)
+            return (w, rate)
+        }
+    }
+
+    // 해당 습관의 "주 목표 일수" 추출 (주간 목표선 용)
+    func weeklyTargetDays(for habit: Habit?) -> Int {
+        guard let habit else { return 7 } // 전체 보기면 최대 7
+        switch habit.recurrence {
+        case .daily: return 7
+        case .daysPerWeek(let n): return max(1, min(7, n))
+        case .custom(let days): return max(1, min(7, days.count))
+        }
+    }
+}
+
+extension DataStore {
+    func isHabitCompleted(_ habit: Habit, on day: Date = .now) -> Bool { // ADD
+        let cal = Calendar.current
+        let key = cal.startOfDay(for: day)
+        return records.contains { $0.habitId == habit.id && $0.completed && cal.isDate($0.date, inSameDayAs: key) }
+    }
+
+    func todayScheduledHabits(on day: Date = .now) -> [Habit] { // ADD
+        let cal = Calendar.current
+        return habits.filter { $0.isActive && $0.isScheduled(on: day, calendar: cal) }
+    }
+
+    func todayCounts(on day: Date = .now) -> (done: Int, total: Int) { // ADD
+        let list = todayScheduledHabits(on: day)
+        let done = list.filter { isHabitCompleted($0, on: day) }.count
+        return (done, list.count)
+    }
+
+    func toggle(_ habit: Habit, on day: Date = .now) { // ADD: 홈에서 빠른 토글
+        let cal = Calendar.current
+        let key = cal.startOfDay(for: day)
+        if let i = records.firstIndex(where: { $0.habitId == habit.id && cal.isDate($0.date, inSameDayAs: key) }) {
+            records[i].completed.toggle()
+        } else {
+            records.append(.init(habitId: habit.id, date: key, completed: true, minutes: habit.durationMin))
+        }
+        checkAchievements()
+    }
 }
 

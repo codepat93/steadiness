@@ -84,6 +84,16 @@ struct DayRecord: Identifiable, Codable {
     }
 }
 
+struct DayNote: Identifiable, Codable, Hashable {
+    let id: UUID
+    var date: Date           // 날짜(자정 기준)
+    var habitId: UUID?       // 특정 약속 메모면 id, 전체 메모면 nil
+    var text: String
+    init(id: UUID = UUID(), date: Date, habitId: UUID? = nil, text: String) {
+        self.id = id; self.date = date; self.habitId = habitId; self.text = text
+    }
+}
+
 struct Achievement: Identifiable, Codable, Hashable {
     let id: String
     let title: String
@@ -97,4 +107,22 @@ enum DefaultBadges {
         .init(id: "streak_7",  title: "7일 연속",  threshold: 7),
         .init(id: "streak_30", title: "30일 연속", threshold: 30)
     ]
+}
+
+extension Habit {
+    /// TODO: 실제 반복 주기 규칙 적용 필요.
+    /// 일단은 컴파일/동작 우선으로 '오늘도 수행 대상'으로 처리.
+    func isScheduled(on date: Date, calendar: Calendar = .current) -> Bool {
+        return true
+    }
+}
+
+extension PeriodType {
+    var displayName: String {
+        switch self {
+        case .monthly: return "월간"
+        case .quarter: return "분기"
+        case .halfyear: return "반기"
+        }
+    }
 }
