@@ -6,10 +6,14 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct HomeView: View {
     @EnvironmentObject var store: DataStore
     @Binding var showAddFlow: Bool
+    // ADD: 토글 직후 Undo용 상태
+    @State private var lastToggledHabit: Habit? = nil
+    @State private var showUndoToast: Bool = false
 
     // ✅ 바인딩 편의 이니셜라이저 (인자 없이도 컴파일되게)
     init(showAddFlow: Binding<Bool> = .constant(false)) {
@@ -26,6 +30,11 @@ struct HomeView: View {
     private var progress: Double {
         guard summary.total > 0 else { return 0 }
         return Double(summary.done) / Double(summary.total)
+    }
+    // ADD: 햅틱
+    private func successHaptic() {
+        let gen = UINotificationFeedbackGenerator()
+        gen.notificationOccurred(.success)
     }
 
     var body: some View {
@@ -108,15 +117,25 @@ struct HomeView: View {
                                 
                                 // ✅ 오른쪽: 체크 버튼 (NavigationLink와 분리)
                                 Button {
-                                    store.toggle(habit)
+                                    withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                        store.toggle(habit)
+                                        lastToggledHabit = habit
+                                        showUndoToast = true
+                                    }
+                                    successHaptic()
+                                    // 토스트 자동 숨김
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                        withAnimation(.easeOut) { showUndoToast = false }
+                                    }
                                 } label: {
-                                    Image(systemName: store.isHabitCompleted(habit)
-                                          ? "checkmark.circle.fill"
-                                          : "circle")
-                                        .foregroundStyle(store.isHabitCompleted(habit) ? .green : .gray.opacity(0.5))
+                                    // 아이콘에 살짝 스케일 애니메이션
+                                    let done = store.isHabitCompleted(habit)
+                                    Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                                        .foregroundStyle(done ? .green : .gray.opacity(0.5))
                                         .font(.system(size: 22))
+                                        .scaleEffect(done ? 1.08 : 1.0)
                                 }
-                                .buttonStyle(.plain) // 중요: 버튼 누를 때 셀 하이라이트 방지
+                                .buttonStyle(.plain)
                                 
 //                                // 완료 아이콘(실시간 반영)
 //                                if store.isHabitCompleted(habit) {
@@ -147,12 +166,43 @@ struct HomeView: View {
                 .listStyle(.insetGrouped)
             }
         }
+        // ADD: 하단 토스트 (Undo)
+        .overlay(alignment: .bottom) {
+            if showUndoToast, let habit = lastToggledHabit {
+                HStack(spacing: 12) {
+                    Image(systemName: "checkmark.circle.fill")
+                    Text("‘\(habit.title)’ 완료로 표시됨")
+                        .lineLimit(1)
+
+                    Spacer(minLength: 8)
+
+                    Button("되돌리기") {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.9)) {
+                            store.toggle(habit)       // 다시 토글 → 원상복구
+                            showUndoToast = false
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.gray.opacity(0.3))
+                    .foregroundStyle(.primary)
+                    .font(.caption)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .shadow(radius: 8, y: 4)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 20)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
         .sheet(isPresented: $showAddFlow) {
             // 약속 추가 플로우 (형 프로젝트의 실제 뷰로 교체)
             AddHabitFlowView()
                 .environmentObject(store)
         }
     }
+    
 }
 
 struct HabitCardView: View {
